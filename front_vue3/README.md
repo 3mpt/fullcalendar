@@ -1,7 +1,33 @@
-# Vue 3 + Vite
+# FullCalendar📅
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+原vue2的版本已不再更新，整体项目迁移到Vue3🚀
 
-## Recommended IDE Setup
+## 环境搭建🔧🔧🔧
 
-- [VS Code](https://code.visualstudio.com/) + [Vue - Official](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (previously Volar) and disable Vetur
+node版本 v18.18.2
+
+npm版本 v10.2.4
+
+vue版本 v3.4.21
+
+## 启动方式🚀🚀🚀
+
+`npm install ` 报错请使用`npm install --force`
+
+`npm run dev`
+
+## 更新日志🆙🆙🆙
+
+2024/4/21日 开始 登录界面改为组合式api写法，其他组件从vue2==>vue3
+
+2024/4/22日 vue3 选项式api更新完毕，开始更新组合式api
+
+home页更新完成、用户更新完成、事件更新完成
+
+2024/4/29
+
+ 新增了拖动事件，
+
+事件周期精度改为0.5，
+
+可以通过周视图里拉动开头和结尾改变时间的开始时间和结束时间了(事件持续时间也会延长！)

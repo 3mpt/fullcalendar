@@ -27,6 +27,8 @@
         <el-form-item label="活动时长(小时)" label-width="110px">
           <el-input-number
             v-model="form.duration"
+            :precision="1"
+            :step="0.5"
             controls-position="right"
             :min="1"
           >
@@ -96,7 +98,7 @@ import { ElMessage, ElNotification } from "element-plus";
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
+import interactionPlugin, { Draggable } from "@fullcalendar/interaction";
 import listPlugin from "@fullcalendar/list";
 import rrulePlugin from "@fullcalendar/rrule";
 import axios from "axios";
@@ -222,19 +224,21 @@ const calendarEvents = ref([
 const optTitle = ref("添加事件");
 const dialogFormVisible = ref(false);
 
-//启动测试
+//获取所有事件
 const getlist = async () => {
   userid.value = store.getters.getUserId;
   //先拿id
   const { data: res } = await axios.post("/get_event", {
     user_id: userid.value,
   }); //发请求
-  // console.log('请求结果', res)
+
   if (res.code !== 200) {
     return ElMessage.error(res.msg);
   }
 
   calendarEvents.value = res.data;
+  // console.log('请求结果', calendarEvents.value )
+
   calendarOptions.value.events = calendarEvents.value;
   ElNotification.closeAll();
 
@@ -261,8 +265,12 @@ const handleDateClick = (selectInfo) => {
     let regex = new RegExp("T");
     if (regex.test(selectInfo.dateStr)) {
       form.value.rrule.dtstart = selectInfo.dateStr;
+      console.log("true");
     } else {
+      console.log("测试", selectInfo.dateStr);
+
       form.value.rrule.dtstart = selectInfo.dateStr + "T08:00:00+08:00";
+      console.log(form.value.rrule.dtstart);
     }
     form.value.rrule.freq = "weekly";
     form.value.rrule.interval = 1;
@@ -282,34 +290,88 @@ const handleEventClick = (info) => {
       form.value = item;
       if (typeof form.value.duration != "number") {
         let durationArr = form.value.duration.split(":");
+        console.log(durationArr);
+
         form.value.duration = parseInt(durationArr[0], 10);
+        form.value.duration += parseInt(durationArr[1]) == 30 ? 0.5 : 0;
+        console.log(form.value.duration);
       }
     }
   });
 };
 // 日程拖动事件
 const handleEventDrop = (info) => {
-  form.value = {
-    id: info.event.id,
-    title: info.event.title,
-    start: info.event.startStr,
-    end: info.event.endStr,
-    area: info.event._def.extendedProps.area,
-    detail: info.event._def.extendedProps.detail,
-  };
+  calendarEvents.value.forEach((item, index, arr) => {
+    if (item.id == info.event.id) {
+      form.value = item;
+      if (typeof form.value.duration != "number") {
+        let durationArr = form.value.duration.split(":");
+        form.value.duration = parseInt(durationArr[0], 10);
+        form.value.duration += parseInt(durationArr[1]) == 30 ? 0.5 : 0;
+      }
+    }
+  });
+  form.value.rrule.dtstart = info.event.startStr;
   saveEvent();
 };
 // 日程缩放事件
 const eventResize = (info) => {
-  form.value = {
-    id: info.event.id,
-    title: info.event.title,
-    start: info.event.startStr,
-    end: info.event.endStr,
-    area: info.event._def.extendedProps.area,
-    detail: info.event._def.extendedProps.detail,
-  };
+  calendarEvents.value.forEach((item, index, arr) => {
+    if (item.id == info.event.id) {
+      form.value = item;
+      if (typeof form.value.duration != "number") {
+        let durationArr = form.value.duration.split(":");
+        form.value.duration = parseInt(durationArr[0], 10);
+        form.value.duration += parseInt(durationArr[1]) == 30 ? 0.5 : 0;
+      }
+    }
+  });
+  console.log(form.value);
+
+  // console.log(form.value.rrule.dtstart, info.event.startStr);
+  // 给定的UTC时间字符串和带时区信息的时间字符串
+  var utcTimeString = form.value.rrule.dtstart;
+  //持续时间转为时间戳
+  var durationtamp = form.value.duration * 60 * 60 * 1000;
+  
+  var startTimeString = info.event.startStr;
+  var endTimeString = info.event.endStr;
+  // 将UTC时间字符串转换为时间戳
+  var utcTimestamp = Date.parse(utcTimeString); // 时间戳单位为毫秒
+  // 将带时区信息的时间字符串转换为时间戳
+  var endTimestamp = Date.parse(endTimeString);
+  var startTimestamp = Date.parse(startTimeString);
+  
+  var formEndtamp = utcTimestamp + durationtamp
+  //拖动尾部
+  if (startTimestamp == utcTimestamp) {
+    console.log("拖动了尾部");
+    //由尾部时间减去开始时间得出新的时间戳进行替换。
+    var newDuration = endTimestamp-startTimestamp
+    console.log((newDuration)/ (1000 * 60 * 60));
+    form.value.duration =(newDuration)/ (1000 * 60 * 60)
+
+  }
+  //拖动头部
+  if (endTimestamp == formEndtamp) {
+    console.log("拖动了头部");
+    form.value.duration =
+      form.value.duration + (utcTimestamp - startTimestamp) / (1000 * 60 * 60);
+    form.value.rrule.dtstart = info.event.startStr;
+  }
+
+  //新的持续时间
+
   saveEvent();
+  // form.value = {
+  //   id: info.event.id,
+  //   title: info.event.title,
+  //   start: info.event.startStr,
+  //   end: info.event.endStr,
+  //   area: info.event._def.extendedProps.area,
+  //   detail: info.event._def.extendedProps.detail,
+  // };
+  // saveEvent();
   // console.log(form.value)
 };
 //保存事件
@@ -323,23 +385,25 @@ const saveEvent = async () => {
     delete form.value.rrule.count;
   }
   //将持续时间字段格式化
-  // if (typeof form.value.duration === "number") {
-  //   form.value.duration = form.value.duration.toString() + ":00";
-  // }
-
   if (form.value.rrule.until === "") {
     // console.log("触发了",delete form.value.rrule.until)
     delete form.value.rrule.until;
   }
+  var duration = form.value.duration;
+  var integerPart = Math.floor(duration); // 整数部分
+  var decimalPart = duration - integerPart; // 小数部分
+  // 将小数部分转换为分钟
+  var minutes = decimalPart === 0.5 ? "30" : "00";
+  var durationString = integerPart.toString() + ":" + minutes;
   // console.log('新增form', form.value)
   if (form.value.id === undefined || form.value.id == "") {
     //新增
     // form.value.id = res.id;
-    const { data: res } = await axios.post("/add_event", 
-  {
-    ...form.value,
-    duration: form.value.duration.toString() + ":00"
-  });
+    const { data: res } = await axios.post("/add_event", {
+      ...form.value,
+      // duration: form.value.duration.toString() + ":00",
+      duration: durationString,
+    });
     if (res.code !== 200) {
       return ElMessage.error(res.msg);
     }
@@ -347,9 +411,9 @@ const saveEvent = async () => {
   } else {
     //修改
     const { data: res } = await axios.post("/update_event", {
-    ...form.value,
-    duration: form.value.duration.toString() + ":00"
-  });
+      ...form.value,
+      duration: durationString,
+    });
     // console.log(res)
     if (res.code !== 200) {
       return ElMessage.error(res.msg);
@@ -413,6 +477,8 @@ const DialogClosed = () => {
   ElNotification.closeAll();
   getlist();
 };
+//日程拖动
+
 const calendarOptions = ref({
   plugins: [
     dayGridPlugin,
@@ -421,6 +487,7 @@ const calendarOptions = ref({
     listPlugin,
     rrulePlugin,
   ],
+
   // 日历头部按钮位置
   headerToolbar: {
     left: "prev,next today",
@@ -462,9 +529,10 @@ const calendarOptions = ref({
     hour12: false,
   },
   events: [],
-  editable: false, // 是否可以进行（拖动、缩放）修改
-  eventStartEditable: false, // Event日程开始时间可以改变，默认为true，若为false,则表示开始结束时间范围不能拉伸，只能拖拽
-  eventDurationEditable: false, // Event日程的开始结束时间距离是否可以改变，默认为true,若为false，则表示开始结束时间范围不能拉伸，只能拖拽
+  editable: true, // 是否可以进行（拖动、缩放）修改
+  eventResizableFromStart: true,
+  eventStartEditable: true, // Event日程开始时间可以改变，默认为true，若为false,则表示开始结束时间范围不能拉伸，只能拖拽
+  eventDurationEditable: true, // Event日程的开始结束时间距离是否可以改变，默认为true,若为false，则表示开始结束时间范围不能拉伸，只能拖拽
   selectable: true, // 是否可以选中日历格
   selectMirror: true,
   selectMinDistance: 0, // 选中日历格的最小距离
