@@ -1,0 +1,32 @@
+{
+  "name": "vue3calendar",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@element-plus/icons": "^0.0.11",
+    "@fullcalendar/core": "^6.1.11",
+    "@fullcalendar/rrule": "^6.1.11",
+    "@fullcalendar/vue3": "^6.1.11",
+    "axios": "^1.6.8",
+    "element-plus": "^2.7.1",
+    "fullcalendar": "^6.1.11",
+    "moment": "^2.30.1",
+    "vue": "^3.4.21",
+    "vue-router": "^4.0.13",
+    "vuex": "^4.0.2",
+    "vuex-persistedstate": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "less": "^4.2.0",
+    "less-loader": "^12.2.0",
+    "vite": "^5.2.0",
+    "vite-plugin-element-plus": "^0.0.12"
+  }
+}
