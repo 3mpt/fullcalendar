@@ -418,7 +418,7 @@ const saveEvent = async () => {
     if (res.code !== 200) {
       return ElMessage.error(res.msg);
     }
-    ElMessage.success(res.msg);
+    ElMessage.success('事件更新成功');
   }
   dialogFormVisible.value = false;
   getlist();
